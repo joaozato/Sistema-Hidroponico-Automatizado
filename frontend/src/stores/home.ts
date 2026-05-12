@@ -30,7 +30,7 @@ export const useHomeStore = defineStore('home', () => {
 
   const alert = ref<HomeAlert>({
     show: true,
-    title: 'Alerta na Carreira 2!',
+    title: 'Alerta na Carreira 02',
     description: 'Nível de pH abaixo do ideal. Verifique a solução nutritiva.',
   })
 
