@@ -85,7 +85,7 @@ const onToggle = () => {
               <div :class="['text-xl font-bold tabular-nums tracking-tight', stat.color]">
                 {{ stat.value }}
               </div>
-              <div :class="['text-[11px] font-semibold uppercase mt-0.5 opacity-90', stat.color]">
+              <div :class="['text-[11px] -mt-0.5 font-semibold uppercase opacity-90', stat.color]">
                 {{ stat.label }}
               </div>
             </div>
