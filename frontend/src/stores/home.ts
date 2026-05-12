@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Carreira, GeneralInfoItem } from '@/components/home/types'
 import {
-  CheckCircleIcon,
+  BadgeCheckIcon,
   DropletsIcon,
   ThermometerIcon,
 } from 'lucide-vue-next'
@@ -53,21 +53,23 @@ export const useHomeStore = defineStore('home', () => {
       label: 'Temperatura',
       value: temperatura.value,
       icon: ThermometerIcon,
-      color: 'text-amber-500',
+      color: 'text-sky-500',
       fullWidth: false,
     },
     {
       label: 'Status',
       value: statusSistema.value,
-      icon: CheckCircleIcon,
+      icon: BadgeCheckIcon,
       color: 'text-emerald-500',
+      iconFill: 'none',
       fullWidth: false,
     },
     {
       label: 'Nível do tanque',
       value: nivelTanque.value,
       icon: DropletsIcon,
-      color: 'text-sky-500',
+      color: 'text-blue-800',
+      iconFill: 'none',
       fullWidth: true,
     },
   ])

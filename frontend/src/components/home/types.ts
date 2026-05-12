@@ -23,5 +23,6 @@ export type GeneralInfoItem = {
   value: string
   icon: Component
   color: string
+  iconFill?: 'currentColor' | 'none'
   fullWidth: boolean
 }

@@ -19,7 +19,11 @@ const { generalInfos } = storeToRefs(homeStore)
       ]"
     >
       <CardContent class="flex items-center gap-3 p-4">
-        <component :is="info.icon" :class="['size-6 shrink-0', info.color]" />
+        <component
+          :is="info.icon"
+          :class="['size-6 shrink-0', info.color]"
+          :fill="info.iconFill ?? 'currentColor'"
+        />
         <div class="leading-tight">
           <p class="text-xs font-medium text-muted-foreground">{{ info.label }}</p>
           <p class="text-base font-semibold tabular-nums text-foreground">{{ info.value }}</p>

@@ -4,12 +4,10 @@ import { FileDownIcon, ImageIcon, Share2Icon } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 import HomeHeader from '@/components/home/HomeHeader.vue'
+import HistoryIntro from '@/components/history/HistoryIntro.vue'
 import HistoryUtilityBar from '@/components/history/HistoryUtilityBar.vue'
-import HistoryTimeRange from '@/components/history/HistoryTimeRange.vue'
-import HistoryLineChart from '@/components/history/HistoryLineChart.vue'
-import HistoryBarChart from '@/components/history/HistoryBarChart.vue'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import HistoryFilters from '@/components/history/HistoryFilters.vue'
+import HistoryChartsSection from '@/components/history/HistoryChartsSection.vue'
 import { useHomeStore } from '@/stores/home'
 
 const timeRanges = [
@@ -51,14 +49,6 @@ const baseSeries = Array.from({ length: 52 }, (_, index) => {
 	}
 })
 
-const activeCarreiraLabel = computed(() => {
-  if (selectedCarreiraId.value === null) {
-    return 'Todas as carreiras'
-  }
-
-  return carreiras.value.find((item) => item.id === selectedCarreiraId.value)?.nome ?? 'Carreira'
-})
-
 const rangeData = computed(() => {
 	const size = rangeSizeByKey[selectedRange.value] ?? 7
 	const slice = baseSeries.slice(-size)
@@ -90,12 +80,15 @@ const displayRangeData = computed(() => {
 	return rangeData.value.filter((_, index) => index % step === 0)
 })
 
-const lineSeries = computed(() => [
+const phSeries = computed(() => [
 	{
 		label: 'pH',
 		color: '#f59e0b',
 		values: displayRangeData.value.map((item) => item.ph),
 	},
+])
+
+const ecSeries = computed(() => [
 	{
 		label: 'EC',
 		color: '#f43f5e',
@@ -142,6 +135,11 @@ const averageTemp = computed(() => {
 	return avg.toFixed(1)
 })
 
+const averageHumidity = computed(() => {
+	const avg = rangeData.value.reduce((sum, item) => sum + item.umidade, 0) / rangeData.value.length
+	return avg.toFixed(0)
+})
+
 const handleUtilityAction = (_id: string) => {
 	// Hook reservado para ações futuras (exportar, compartilhar, etc.).
 }
@@ -153,131 +151,33 @@ const handleUtilityAction = (_id: string) => {
 			<HomeHeader />
 
 			<section class="mt-5">
-				<h1 class="text-xl font-semibold tracking-tight leading-tight">Histórico</h1>
-				<p class="text-sm leading-relaxed text-muted-foreground">
-					Relatório do sistema e exportação rápida dos dados.
-				</p>
+				<HistoryIntro />
 			</section>
 
 			<section class="mt-5">
 				<HistoryUtilityBar :actions="utilityActions" @action="handleUtilityAction" />
 			</section>
 
-			<section class="mt-6 flex items-center justify-between">
-				<div>
-					<h2 class="text-base font-semibold text-foreground">Período</h2>
-					<p class="text-xs text-muted-foreground">Resumo das últimas medições</p>
-				</div>
-				<HistoryTimeRange v-model="selectedRange" :options="timeRanges" />
-			</section>
+			<HistoryFilters
+				:time-ranges="timeRanges"
+				:selected-range="selectedRange"
+				:carreiras="carreiras"
+				:selected-carreira-id="selectedCarreiraId"
+				@update:selected-range="selectedRange = $event"
+				@update:selected-carreira-id="selectedCarreiraId = $event"
+			/>
 
-			<section class="mt-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<h2 class="text-base font-semibold text-foreground">Carreiras</h2>
-						<p class="text-xs text-muted-foreground">{{ activeCarreiraLabel }}</p>
-					</div>
-				</div>
-				<div class="mt-3">
-					<div class="flex gap-2 overflow-x-auto pb-2">
-						<Button
-							variant="ghost"
-							size="sm"
-							class="h-8 shrink-0 rounded-full px-3 text-xs font-semibold"
-							:class="selectedCarreiraId === null ? 'bg-muted/60 text-foreground' : 'text-muted-foreground'"
-							@click="selectedCarreiraId = null"
-						>
-							Todas
-						</Button>
-						<Button
-							v-for="carreira in carreiras"
-							:key="carreira.id"
-							variant="ghost"
-							size="sm"
-							class="h-8 shrink-0 rounded-full px-3 text-xs font-semibold"
-							:class="selectedCarreiraId === carreira.id ? 'bg-muted/60 text-foreground' : 'text-muted-foreground'"
-							@click="selectedCarreiraId = carreira.id"
-						>
-							{{ carreira.nome }}
-						</Button>
-					</div>
-				</div>
-			</section>
-
-			<section class="mt-4 grid gap-4">
-				<Card class="rounded-3xl">
-					<CardContent class="flex flex-col gap-3 p-4">
-						<div class="flex items-start justify-between gap-3">
-							<div>
-								<p class="text-sm font-semibold text-foreground">pH e Condutividade</p>
-								<p class="text-xs text-muted-foreground">Estabilidade dos sensores no período</p>
-							</div>
-							<div class="flex items-center gap-3 text-[11px] text-muted-foreground">
-								<span class="flex items-center gap-1">
-									<span class="size-2 rounded-full" :style="{ backgroundColor: '#f59e0b' }" />
-									pH
-								</span>
-								<span class="flex items-center gap-1">
-									<span class="size-2 rounded-full" :style="{ backgroundColor: '#f43f5e' }" />
-									EC
-								</span>
-							</div>
-						</div>
-						<HistoryLineChart :series="lineSeries" :labels="rangeLabels" />
-					</CardContent>
-				</Card>
-
-				<Card class="rounded-3xl">
-					<CardContent class="flex flex-col gap-3 p-4">
-						<div class="flex items-start justify-between gap-3">
-							<div>
-								<p class="text-sm font-semibold text-foreground">Umidade</p>
-								<p class="text-xs text-muted-foreground">Variação de umidade no período</p>
-							</div>
-							<div class="flex items-center gap-2 text-[11px] text-muted-foreground">
-								<span class="flex items-center gap-1">
-									<span class="size-2 rounded-full" :style="{ backgroundColor: '#10b981' }" />
-									Umidade
-								</span>
-							</div>
-						</div>
-						<HistoryLineChart :series="humiditySeries" :labels="rangeLabels" />
-					</CardContent>
-				</Card>
-
-				<Card class="rounded-3xl">
-					<CardContent class="flex flex-col gap-4 p-4">
-						<div>
-							<p class="text-sm font-semibold text-foreground">Resumo do período</p>
-							<p class="text-xs text-muted-foreground">Indicadores médios por janela selecionada</p>
-						</div>
-						<div class="grid grid-cols-3 gap-3">
-							<div class="rounded-2xl bg-muted/40 p-3 text-center">
-								<p class="text-[11px] font-semibold text-muted-foreground">pH médio</p>
-								<p class="mt-1 text-base font-semibold text-foreground">{{ averagePh }}</p>
-							</div>
-							<div class="rounded-2xl bg-muted/40 p-3 text-center">
-								<p class="text-[11px] font-semibold text-muted-foreground">EC médio</p>
-								<p class="mt-1 text-base font-semibold text-foreground">{{ averageEc }}</p>
-							</div>
-							<div class="rounded-2xl bg-muted/40 p-3 text-center">
-								<p class="text-[11px] font-semibold text-muted-foreground">Temp. média</p>
-								<p class="mt-1 text-base font-semibold text-foreground">{{ averageTemp }}°C</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				<Card class="rounded-3xl">
-					<CardContent class="flex flex-col gap-3 p-4">
-						<div>
-							<p class="text-sm font-semibold text-foreground">Temperatura média</p>
-							<p class="text-xs text-muted-foreground">Distribuição por blocos do período</p>
-						</div>
-						<HistoryBarChart :items="barItems" color="var(--chart-3)" />
-					</CardContent>
-				</Card>
-			</section>
+			<HistoryChartsSection
+				:ph-series="phSeries"
+				:ec-series="ecSeries"
+				:humidity-series="humiditySeries"
+				:range-labels="rangeLabels"
+				:bar-items="barItems"
+				:average-ph="averagePh"
+				:average-ec="averageEc"
+				:average-humidity="averageHumidity"
+				:average-temp="averageTemp"
+			/>
 		</div>
 	</div>
 </template>
