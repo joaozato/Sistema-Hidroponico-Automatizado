@@ -34,7 +34,9 @@ const activeCarreiraLabel = computed(() => {
         @update:model-value="emit('update:selectedRange', $event)" />
     </div>
     <div class="mt-3">
-      <div class="flex gap-2 overflow-x-auto pb-2">
+      <div
+        class="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         <Button variant="ghost" size="sm"
           class="h-10 shrink-0 rounded-full px-4 text-sm font-semibold border border-neutral-200 bg-background shadow-sm transition-all duration-200 active:translate-y-0.5 active:shadow-[inset_0_4px_6px_-1px_rgba(0,0,0,0.1),inset_0_2px_4px_-2px_rgba(0,0,0,0.1)]"
           :class="props.selectedCarreiraId === null
