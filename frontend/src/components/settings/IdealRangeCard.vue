@@ -153,6 +153,7 @@ const commitEc = (changed: ChangedSide) => {
             :max="8"
             :step="0.1"
             :min-steps-between-thumbs="1"
+            icon-color="amber-500"
             aria-label="Faixa ideal de pH"
             @update:model-value="emit('update:phRange', $event as Range)"
           />
@@ -205,6 +206,7 @@ const commitEc = (changed: ChangedSide) => {
             :max="3"
             :step="0.1"
             :min-steps-between-thumbs="1"
+            icon-color="rose-500"
             aria-label="Faixa ideal de EC"
             @update:model-value="emit('update:ecRange', $event as Range)"
           />
