@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DropletIcon, ZapIcon } from 'lucide-vue-next'
 import { Slider } from '@/components/ui/slider'
 import type { Range } from '@/stores/settings'
 
@@ -109,7 +110,10 @@ const commitEc = (changed: ChangedSide) => {
       <div class="flex flex-col gap-6">
         <section class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-sm font-semibold leading-snug text-foreground">pH</h2>
+            <div class="flex items-center gap-2">
+              <DropletIcon class="size-4 text-amber-500" fill="currentColor" />
+              <h2 class="text-sm font-semibold leading-snug text-foreground">pH</h2>
+            </div>
             <span class="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">{{ phLabel }}</span>
           </div>
 
@@ -149,6 +153,7 @@ const commitEc = (changed: ChangedSide) => {
             :max="8"
             :step="0.1"
             :min-steps-between-thumbs="1"
+            icon-color="amber-500"
             aria-label="Faixa ideal de pH"
             @update:model-value="emit('update:phRange', $event as Range)"
           />
@@ -158,7 +163,10 @@ const commitEc = (changed: ChangedSide) => {
 
         <section class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-sm font-semibold leading-snug text-foreground">EC</h2>
+            <div class="flex items-center gap-2">
+              <ZapIcon class="size-4 text-rose-500" fill="currentColor" />
+              <h2 class="text-sm font-semibold leading-snug text-foreground">EC</h2>
+            </div>
             <span class="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">{{ ecLabel }}</span>
           </div>
 
@@ -198,6 +206,7 @@ const commitEc = (changed: ChangedSide) => {
             :max="3"
             :step="0.1"
             :min-steps-between-thumbs="1"
+            icon-color="rose-500"
             aria-label="Faixa ideal de EC"
             @update:model-value="emit('update:ecRange', $event as Range)"
           />

@@ -7,8 +7,26 @@ import { cn } from '@/lib/utils'
 
 defineOptions({ inheritAttrs: false })
 
-const props = defineProps<SliderRootProps & { class?: HTMLAttributes['class'] }>()
+type SliderColor = 'primary' | 'amber-500' | 'rose-500'
+
+const props = defineProps<
+  SliderRootProps & {
+    class?: HTMLAttributes['class']
+    iconColor?: SliderColor
+  }
+>()
 const attrs = useAttrs()
+
+const rangeColorClass = computed(() => {
+  const color = props.iconColor ?? 'primary'
+  const byColor: Record<SliderColor, string> = {
+    primary: 'bg-primary',
+    'amber-500': 'bg-amber-500',
+    'rose-500': 'bg-rose-500',
+  }
+
+  return byColor[color] ?? byColor.primary
+})
 
 const thumbs = computed(() => {
   if (Array.isArray(props.modelValue) && props.modelValue.length > 0) return props.modelValue
@@ -18,7 +36,7 @@ const thumbs = computed(() => {
 
 const forwarded = computed(() => {
   const { class: _class, ...attrsNoClass } = attrs as Record<string, unknown>
-  const { class: _propsClass, ...delegated } = props
+  const { class: _propsClass, iconColor: _iconColor, ...delegated } = props
   return { ...attrsNoClass, ...delegated }
 })
 </script>
@@ -33,7 +51,7 @@ const forwarded = computed(() => {
       data-slot="slider-track"
       class="relative h-2 w-full grow overflow-hidden rounded-full bg-muted"
     >
-      <SliderRange data-slot="slider-range" class="absolute h-full bg-primary" />
+      <SliderRange data-slot="slider-range" :class="cn('absolute h-full', rangeColorClass)" />
     </SliderTrack>
 
     <SliderThumb
