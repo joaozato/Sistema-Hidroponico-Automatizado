@@ -9,6 +9,7 @@ export type UtilityAction = {
 
 const props = defineProps<{
   actions: UtilityAction[]
+  busyAction?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -22,7 +23,9 @@ const emit = defineEmits<{
       v-for="action in props.actions"
       :key="action.id"
       type="button"
-      class="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2 text-[11px] font-semibold leading-tight text-foreground shadow-sm transition hover:bg-muted/40"
+      :disabled="Boolean(props.busyAction)"
+      :aria-busy="props.busyAction === action.id"
+      class="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2 text-[11px] font-semibold leading-tight text-foreground shadow-sm transition hover:bg-muted/40 disabled:cursor-wait disabled:opacity-60"
       :aria-label="action.label"
       @click="emit('action', action.id)"
     >

@@ -10,9 +10,9 @@ O backend foi construído com **FastAPI** e **PostgreSQL** (asyncpg), contando c
 
 ### Funcionalidades do Backend
 - Consumo assíncrono dos dados da estufa simulada (temperatura, umidade, pH, condutividade, níveis e atuadores das três linhas).
-- Simulação de valores de pH e Condutividade, integrando-os nas leituras.
+- Integração dos valores de pH e condutividade fornecidos pelo simulador.
 - Controle Automatizado: O sistema avalia os parâmetros e, caso fora das metas, registra as ações corretivas.
-- Controle Manual: API para acionar componentes manualmente.
+- Modo Manual: desliga a automação e mantém o monitoramento ativo.
 
 ---
 
@@ -79,20 +79,9 @@ Você pode testar todos os endpoints interativamente usando a documentação do 
   ```
 
 ### 🎮 Controle (Ações)
-- `PUT /api/control/lines/{line_number}/pumps/{pump_number}`
-  Encaminha um comando individual ao simulador quando o modo manual está ativo. O payload é `{ "enabled": true, "flow": 12 }`, com linhas de 1 a 3, bombas de 1 a 8 e fluxo de 0 a 20.
-- `POST /api/control/manual`
-  Grava uma ação manual no sistema. **Nota:** Só funciona se o modo automático (`is_auto_mode`) estiver desativado (`false`).
-  Exemplo de payload (JSON):
-  ```json
-  {
-    "action_type": "LIGAR_BOMBA_NUTRIENTES",
-    "details": "Usuário ligou a bomba via dashboard."
-  }
-  ```
-
+- O modo manual é sincronizado por `PUT /api/config`, definindo `is_auto_mode` como `false`. Nesse modo, o sistema não executa ações automáticas e continua somente monitorando a telemetria.
 - `GET /api/control/logs`
-  Retorna o histórico/auditoria de todas as ações que o sistema realizou (tanto automáticas quanto manuais).
+  Retorna o histórico das decisões automáticas registradas pelo sistema.
 
 ### Variáveis de ambiente
 

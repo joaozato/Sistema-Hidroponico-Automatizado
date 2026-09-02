@@ -57,17 +57,6 @@ async def fetch_data_from_simulation():
             return None
 
 
-async def command_simulation_pump(line_number: int, pump_number: int, enabled: bool, flow: float):
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        response = await client.patch(
-            f"{SIMULATION_URL}/estufa1/linha{line_number}",
-            json={"pump_number": pump_number, "enabled": enabled, "flow": flow},
-        )
-        response.raise_for_status()
-        line = _line_payload(line_number, response.json())
-        line.update({"id": 0, "snapshot_id": 0, "timestamp": datetime.now(timezone.utc)})
-        return line
-
 async def run_automatic_control(session, sensors, lines, config):
     if not config.is_auto_mode:
         return

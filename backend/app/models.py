@@ -55,5 +55,5 @@ class ActionLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    action_type = Column(String, index=True) # e.g. "MANUAL_PUMP_ON", "AUTO_PH_ADJUST"
+    action_type = Column(String, index=True) # e.g. "AUTO_PH_UP", "AUTO_WATER_FILL"
     details = Column(String, nullable=True)

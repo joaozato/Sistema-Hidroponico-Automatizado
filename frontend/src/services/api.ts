@@ -32,11 +32,6 @@ export type ControlConfig = {
   min_water_level: number
 }
 
-export type PumpCommand = {
-  enabled: boolean
-  flow: number
-}
-
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -84,10 +79,4 @@ export const api = {
   getConfig: () => request<ControlConfig>('/api/config'),
   updateConfig: (config: Omit<ControlConfig, 'id'>) =>
     request<ControlConfig>('/api/config', { method: 'PUT', body: JSON.stringify(config) }),
-  updatePump: (lineNumber: number, pumpNumber: number, command: PumpCommand) =>
-    request<{ line: LineTelemetry }>(`/api/control/lines/${lineNumber}/pumps/${pumpNumber}`, {
-      method: 'PUT',
-      body: JSON.stringify(command),
-    }),
 }
-

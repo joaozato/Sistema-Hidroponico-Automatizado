@@ -9,6 +9,13 @@ import HistoryUtilityBar from '@/components/history/HistoryUtilityBar.vue'
 import HistoryFilters from '@/components/history/HistoryFilters.vue'
 import HistoryChartsSection from '@/components/history/HistoryChartsSection.vue'
 import { sortSnapshotsAscending } from '@/components/history/historyData'
+import {
+  createHistoryPdf,
+  createHistoryShareText,
+  downloadBlob,
+  exportHistoryImage,
+  type HistoryExportData,
+} from '@/components/history/historyExport'
 import { useHomeStore } from '@/stores/home'
 import { api, type SensorSnapshot } from '@/services/api'
 
@@ -25,7 +32,10 @@ const selectedCarreiraId = ref<number | null>(null)
 const historyData = ref<SensorSnapshot[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const utilityBusy = ref<string | null>(null)
+const utilityFeedback = ref<{ message: string; type: 'success' | 'error' } | null>(null)
 let requestVersion = 0
+let feedbackTimer: ReturnType<typeof setTimeout> | undefined
 
 const homeStore = useHomeStore()
 const { carreiras } = storeToRefs(homeStore)
@@ -109,8 +119,86 @@ const averageEc = computed(() => formatAverage(samples.value.map((item) => item.
 const averageTemp = computed(() => formatAverage(samples.value.map((item) => item.temperature), 1))
 const averageHumidity = computed(() => formatAverage(samples.value.map((item) => item.humidity), 0))
 
-const handleUtilityAction = (_id: string) => {
-  // Exportação e compartilhamento permanecem fora do escopo da integração.
+const selectedRangeLabel = computed(() => timeRanges.find((range) => range.value === selectedRange.value)?.label ?? selectedRange.value)
+const selectedCarreiraLabel = computed(() => {
+  if (selectedCarreiraId.value === null) return 'Todas as carreiras'
+  return carreiras.value.find((carreira) => carreira.id === selectedCarreiraId.value)?.nome ?? 'Carreira'
+})
+
+const exportData = computed<HistoryExportData>(() => ({
+  rangeLabel: selectedRangeLabel.value,
+  carreiraLabel: selectedCarreiraLabel.value,
+  samples: samples.value,
+  chartSamples: displayRangeData.value,
+  barItems: barItems.value,
+  averages: {
+    ph: averagePh.value,
+    ec: averageEc.value,
+    humidity: averageHumidity.value,
+    temperature: averageTemp.value,
+  },
+}))
+
+const filenamePart = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'historico'
+
+const setUtilityFeedback = (message: string, type: 'success' | 'error' = 'success') => {
+  utilityFeedback.value = { message, type }
+  if (feedbackTimer) clearTimeout(feedbackTimer)
+  feedbackTimer = setTimeout(() => { utilityFeedback.value = null }, 5000)
+}
+
+const copyToClipboard = async (text: string) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  const copied = document.execCommand('copy')
+  textarea.remove()
+  if (!copied) throw new Error('Não foi possível copiar o resumo.')
+}
+
+const handleUtilityAction = async (id: string) => {
+  if (utilityBusy.value) return
+  utilityBusy.value = id
+  utilityFeedback.value = null
+  const data = exportData.value
+  const baseFilename = `historico-${filenamePart(data.rangeLabel)}-${new Date().toISOString().slice(0, 10)}`
+
+  try {
+    if (id === 'pdf') {
+      downloadBlob(createHistoryPdf(data), `${baseFilename}.pdf`)
+      setUtilityFeedback('PDF exportado com sucesso.')
+    } else if (id === 'imagem') {
+      await exportHistoryImage(data, `${baseFilename}.png`)
+      setUtilityFeedback('Imagem exportada com sucesso.')
+    } else if (id === 'compartilhar') {
+      const text = createHistoryShareText(data)
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ title: 'Histórico do sistema hidropônico', text, url: window.location.href })
+          setUtilityFeedback('Relatório compartilhado com sucesso.')
+        } catch (cause) {
+          if (cause instanceof Error && cause.name === 'AbortError') return
+          throw cause
+        }
+      } else {
+        await copyToClipboard(`${text}\n\n${window.location.href}`)
+        setUtilityFeedback('Resumo copiado para a área de transferência.')
+      }
+    }
+  } catch (cause) {
+    setUtilityFeedback(cause instanceof Error ? cause.message : 'Não foi possível concluir a ação.', 'error')
+  } finally {
+    utilityBusy.value = null
+  }
 }
 </script>
 
@@ -119,7 +207,17 @@ const handleUtilityAction = (_id: string) => {
     <div class="mx-auto w-full max-w-md px-4 pb-28">
       <HomeHeader />
       <section class="mt-5"><HistoryIntro /></section>
-      <section class="mt-5"><HistoryUtilityBar :actions="utilityActions" @action="handleUtilityAction" /></section>
+      <section class="mt-5">
+        <HistoryUtilityBar :actions="utilityActions" :busy-action="utilityBusy" @action="handleUtilityAction" />
+        <p
+          v-if="utilityFeedback"
+          aria-live="polite"
+          class="mt-2 text-center text-xs font-medium"
+          :class="utilityFeedback.type === 'error' ? 'text-destructive' : 'text-emerald-600'"
+        >
+          {{ utilityFeedback.message }}
+        </p>
+      </section>
 
       <HistoryFilters
         :time-ranges="timeRanges"

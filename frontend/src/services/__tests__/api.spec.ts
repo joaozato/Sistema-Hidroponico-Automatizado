@@ -13,14 +13,21 @@ describe('api', () => {
     expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:8000/api/sensors/current', expect.objectContaining({ headers: { 'Content-Type': 'application/json' } }))
   })
 
-  it('envia comando individual com caminho e payload corretos', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ line: { line_number: 2 } }), { status: 200 })))
+  it('salva o modo manual e os limites de automação', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 1 }), { status: 200 })))
 
-    await api.updatePump(2, 4, { enabled: true, flow: 12 })
+    await api.updateConfig({
+      is_auto_mode: false,
+      target_ph_min: 5.5,
+      target_ph_max: 6.5,
+      target_conductivity_min: 1,
+      target_conductivity_max: 2,
+      min_water_level: 20,
+    })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://127.0.0.1:8000/api/control/lines/2/pumps/4',
-      expect.objectContaining({ method: 'PUT', body: JSON.stringify({ enabled: true, flow: 12 }) }),
+      'http://127.0.0.1:8000/api/config',
+      expect.objectContaining({ method: 'PUT' }),
     )
   })
 

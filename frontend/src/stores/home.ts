@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Carreira, GeneralInfoItem } from '@/components/home/types'
 import { api, type LineTelemetry, type SensorSnapshot } from '@/services/api'
+import { buildAlertSummary } from '@/services/alertRules'
 import { useSettingsStore } from './settings'
 import { BadgeCheckIcon, DropletsIcon, ThermometerIcon, WavesIcon } from 'lucide-vue-next'
 
@@ -40,28 +41,28 @@ export const useHomeStore = defineStore('home', () => {
   }
 
   const carreiras = computed(() => (snapshot.value?.lines ?? []).map(lineToCarreira))
-  const hasAlert = computed(() => carreiras.value.some((item) => item.status === 'alerta'))
-  const alert = computed(() => {
-    const affected = carreiras.value.find((item) => item.status === 'alerta')
-    return {
-      show: Boolean(affected),
-      title: affected ? `Alerta na ${affected.nome}` : '',
-      description: affected ? 'pH ou condutividade fora da faixa configurada.' : '',
-    }
-  })
+  const hasLineAlert = computed(() => carreiras.value.some((item) => item.status === 'alerta'))
+  const alert = computed(() => buildAlertSummary(
+    snapshot.value,
+    settingsStore.phIdealRange,
+    settingsStore.ecIdealRange,
+    settingsStore.minWaterLevel,
+    error.value,
+  ))
 
   const formatValue = (value: number | null | undefined, suffix = '') =>
     value === null || value === undefined ? '—' : `${value.toFixed(1)}${suffix}`
 
   const statusSistema = computed(() => {
-    if (error.value && !snapshot.value) return 'Sem conexão'
-    if (hasAlert.value) return 'Atenção'
+    if (!snapshot.value || snapshot.value.id === 0 || snapshot.value.lines.length === 0) return 'Sem dados'
+    if (error.value) return 'Sem conexão'
+    if (hasLineAlert.value || alert.value.show) return 'Atenção'
     return 'Normal'
   })
 
   const generalInfos = computed<GeneralInfoItem[]>(() => [
     { label: 'Temperatura externa', value: formatValue(snapshot.value?.temperature, ' °C'), icon: ThermometerIcon, color: 'text-sky-500', fullWidth: false },
-    { label: 'Status', value: statusSistema.value, icon: BadgeCheckIcon, color: hasAlert.value ? 'text-amber-500' : 'text-emerald-500', iconFill: 'none', fullWidth: false },
+    { label: 'Status', value: statusSistema.value, icon: BadgeCheckIcon, color: hasLineAlert.value || alert.value.show ? 'text-amber-500' : 'text-emerald-500', iconFill: 'none', fullWidth: false },
     { label: 'Nível da estufa', value: formatValue(snapshot.value?.water_level, '%'), icon: DropletsIcon, color: 'text-blue-800', iconFill: 'none', fullWidth: false },
     { label: 'Abastecimento central', value: formatValue(snapshot.value?.central_water_level, '%'), icon: WavesIcon, color: 'text-cyan-600', iconFill: 'none', fullWidth: false },
   ])
@@ -91,16 +92,6 @@ export const useHomeStore = defineStore('home', () => {
     pollingTimer = undefined
   }
 
-  const controlPump = async (lineNumber: number, pumpNumber: number, enabled: boolean, flow: number) => {
-    const result = await api.updatePump(lineNumber, pumpNumber, { enabled, flow })
-    if (snapshot.value) {
-      snapshot.value = {
-        ...snapshot.value,
-        lines: snapshot.value.lines.map((line) => line.line_number === lineNumber ? result.line : line),
-      }
-    }
-  }
-
   const toggleCarreira = (id: number) => {
     selectedCarreiraId.value = selectedCarreiraId.value === id ? null : id
   }
@@ -122,7 +113,6 @@ export const useHomeStore = defineStore('home', () => {
     loadSnapshot,
     startPolling,
     stopPolling,
-    controlPump,
     toggleCarreira,
   }
 })

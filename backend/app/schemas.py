@@ -30,7 +30,6 @@ class SensorDataResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 class ActuatorStateResponse(BaseModel):
     id: int
     timestamp: datetime
@@ -66,21 +65,3 @@ class ActionLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-class ManualActionRequest(BaseModel):
-    action_type: str # e.g. "TURN_ON_PUMP_1", "ADD_NUTRIENT"
-    details: Optional[str] = None
-
-
-class PumpCommandRequest(BaseModel):
-    enabled: bool
-    flow: float = 0
-
-
-class PumpCommandResponse(BaseModel):
-    line_number: int
-    pump_number: int
-    enabled: bool
-    flow: float
-    line: LineTelemetryResponse
-    log: ActionLogResponse
