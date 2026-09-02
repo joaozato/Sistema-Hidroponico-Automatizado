@@ -6,9 +6,11 @@ export type Carreira = {
   id: number
   nome: string
   status: CarreiraStatus
-  ph: number
-  ec: number
-  umidade: number
+  ph: number | null
+  ec: number | null
+  umidade: number | null
+  pumpState: number[]
+  flowState: number[]
 }
 
 export type StatItem = {

@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker  #permite criar a função assyncrona
 from sqlalchemy.orm import declarative_base   #base declarativa
 from typing import AsyncGenerator #gerador assyncrono
@@ -7,6 +8,9 @@ import os
 load_dotenv()
 #Database vai receber a info do .env 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL must be configured")
 
 engine = create_async_engine(DATABASE_URL, echo = True)
 #cria a engine de Async e echo faz com que possamos ver as att do banco
@@ -26,3 +30,11 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 Base = declarative_base()
+
+
+async def init_db() -> None:
+    """Create new structures and safely add columns to an existing PostgreSQL schema."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE sensor_data ADD COLUMN IF NOT EXISTS central_water_level FLOAT"))
+        await conn.execute(text("ALTER TABLE sensor_data ADD COLUMN IF NOT EXISTS central_product_level FLOAT"))

@@ -9,7 +9,7 @@ Desenvolvimento de uma solução IoT para automação de estufas de morango em s
 O backend foi construído com **FastAPI** e **PostgreSQL** (asyncpg), contando com tarefas em segundo plano (background tasks) que coletam dados de um servidor de simulação IoT.
 
 ### Funcionalidades do Backend
-- Consumo assíncrono dos dados da estufa simulada (temperatura, umidade, nível de água, etc.).
+- Consumo assíncrono dos dados da estufa simulada (temperatura, umidade, pH, condutividade, níveis e atuadores das três linhas).
 - Simulação de valores de pH e Condutividade, integrando-os nas leituras.
 - Controle Automatizado: O sistema avalia os parâmetros e, caso fora das metas, registra as ações corretivas.
 - Controle Manual: API para acionar componentes manualmente.
@@ -53,10 +53,10 @@ Você pode testar todos os endpoints interativamente usando a documentação do 
 
 ### 🌿 Sensores
 - `GET /api/sensors/current`
-  Retorna a leitura mais recente de todos os sensores (Clima, Solo, Níveis de Água/Produto, pH e Condutividade).
+  Retorna o snapshot mais recente do clima, níveis, abastecimento central e das três linhas, incluindo pH, condutividade, umidade, bombas e fluxo.
   
-- `GET /api/sensors/history`
-  Retorna uma lista com o histórico de leituras (ideal para gerar gráficos no frontend).
+- `GET /api/sensors/history?days=7&line_number=1`
+  Retorna snapshots históricos, opcionalmente filtrados por período e linha.
   
 - `GET /api/sensors/actuators/current`
   Retorna o estado atual de funcionamento das bombas e fluxo.
@@ -79,6 +79,8 @@ Você pode testar todos os endpoints interativamente usando a documentação do 
   ```
 
 ### 🎮 Controle (Ações)
+- `PUT /api/control/lines/{line_number}/pumps/{pump_number}`
+  Encaminha um comando individual ao simulador quando o modo manual está ativo. O payload é `{ "enabled": true, "flow": 12 }`, com linhas de 1 a 3, bombas de 1 a 8 e fluxo de 0 a 20.
 - `POST /api/control/manual`
   Grava uma ação manual no sistema. **Nota:** Só funciona se o modo automático (`is_auto_mode`) estiver desativado (`false`).
   Exemplo de payload (JSON):
@@ -91,3 +93,7 @@ Você pode testar todos os endpoints interativamente usando a documentação do 
 
 - `GET /api/control/logs`
   Retorna o histórico/auditoria de todas as ações que o sistema realizou (tanto automáticas quanto manuais).
+
+### Variáveis de ambiente
+
+Além de `DATABASE_URL`, configure `SIMULATION_URL`, `POLL_INTERVAL_SECONDS` e `CORS_ORIGINS` conforme o ambiente.

@@ -3,6 +3,11 @@ import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeAlert from '@/components/home/HomeAlert.vue'
 import SectionCarreiras from '@/components/home/SectionCarreiras.vue'
 import SectionInformacoesGerais from '@/components/home/SectionInformacoesGerais.vue'
+import { storeToRefs } from 'pinia'
+import { useHomeStore } from '@/stores/home'
+
+const homeStore = useHomeStore()
+const { loading, error } = storeToRefs(homeStore)
 </script>
 
 <template>
@@ -13,6 +18,8 @@ import SectionInformacoesGerais from '@/components/home/SectionInformacoesGerais
 			<HomeHeader />
 
 			<main class="mt-5 flex flex-col gap-6">
+				<p v-if="loading && !homeStore.snapshot" class="text-sm text-muted-foreground">Carregando telemetria…</p>
+				<p v-if="error && !homeStore.snapshot" class="text-sm text-destructive">{{ error }}</p>
 				<!-- alertas -->
 				<HomeAlert />
 

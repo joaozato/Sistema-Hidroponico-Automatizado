@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc
 from app import models, schemas
-import json
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 async def get_latest_sensor_data(session: AsyncSession):
     result = await session.execute(select(models.SensorData).order_by(desc(models.SensorData.timestamp)).limit(1))
@@ -18,6 +19,64 @@ async def create_sensor_data(session: AsyncSession, data: dict):
     await session.commit()
     await session.refresh(db_data)
     return db_data
+
+
+async def create_snapshot(session: AsyncSession, sensors: dict, lines: list[dict]):
+    sensor = models.SensorData(**sensors)
+    session.add(sensor)
+    await session.flush()
+
+    for line in lines:
+        session.add(models.LineTelemetry(snapshot_id=sensor.id, **line))
+
+    await session.commit()
+    await session.refresh(sensor)
+    return sensor
+
+
+async def get_latest_line_telemetries(session: AsyncSession):
+    result = await session.execute(select(models.LineTelemetry).order_by(desc(models.LineTelemetry.timestamp)))
+    latest = {}
+    for item in result.scalars().all():
+        latest.setdefault(item.line_number, item)
+    return [latest[number] for number in sorted(latest)]
+
+
+async def get_snapshot_history(session: AsyncSession, limit: int = 100, line_number: Optional[int] = None, days: Optional[int] = None):
+    query = select(models.SensorData)
+    if days:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        query = query.where(models.SensorData.timestamp >= cutoff)
+    query = query.order_by(desc(models.SensorData.timestamp)).limit(limit)
+
+    sensor_result = await session.execute(query)
+    snapshots = list(sensor_result.scalars().all())
+    if not snapshots:
+        return []
+
+    snapshot_ids = [snapshot.id for snapshot in snapshots]
+    line_query = select(models.LineTelemetry).where(models.LineTelemetry.snapshot_id.in_(snapshot_ids))
+    if line_number is not None:
+        line_query = line_query.where(models.LineTelemetry.line_number == line_number)
+    line_result = await session.execute(line_query.order_by(models.LineTelemetry.timestamp))
+    by_snapshot = {}
+    for line in line_result.scalars().all():
+        by_snapshot.setdefault(line.snapshot_id, []).append(line)
+
+    return [
+        {
+            "id": snapshot.id,
+            "timestamp": snapshot.timestamp,
+            "temperature": snapshot.temperature,
+            "humidity": snapshot.humidity,
+            "water_level": snapshot.water_level,
+            "product_level": snapshot.product_level,
+            "central_water_level": snapshot.central_water_level,
+            "central_product_level": snapshot.central_product_level,
+            "lines": by_snapshot.get(snapshot.id, []),
+        }
+        for snapshot in snapshots
+    ]
 
 async def get_latest_actuator_state(session: AsyncSession):
     result = await session.execute(select(models.ActuatorState).order_by(desc(models.ActuatorState.timestamp)).limit(1))

@@ -6,15 +6,15 @@ import { useHomeStore } from '@/stores/home'
 
 // alerta centralizado no store
 const homeStore = useHomeStore()
-const { alert } = storeToRefs(homeStore)
+const { alert, error } = storeToRefs(homeStore)
 </script>
 
 <template>
-  <Alert v-if="alert.show" variant="destructive" class="border-destructive/40 bg-destructive/5">
+  <Alert v-if="alert.show || error" variant="destructive" class="border-destructive/40 bg-destructive/5">
     <AlertCircleIcon class="size-4 text-destructive" />
-    <AlertTitle class="font-semibold text-destructive">{{ alert.title }}</AlertTitle>
+    <AlertTitle class="font-semibold text-destructive">{{ error ? 'Falha na telemetria' : alert.title }}</AlertTitle>
     <AlertDescription class="text-destructive">
-      {{ alert.description }}
+      {{ error ?? alert.description }}
     </AlertDescription>
   </Alert>
 </template>

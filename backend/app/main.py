@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import Base, engine
+from app.database import engine, init_db
 from app.routers import sensors, config, control
 from app.services.simulation import simulation_polling_task
 # importamos os models para garantir que o Base conheça as tabelas
@@ -28,9 +28,7 @@ background_tasks = set()
 
 @app.on_event("startup")
 async def startup():
-    # Cria as tabelas no banco de dados
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    await init_db()
         
     # Inicia a tarefa de polling da simulação em background
     task = asyncio.create_task(simulation_polling_task())

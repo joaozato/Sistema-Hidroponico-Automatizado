@@ -30,9 +30,9 @@ const StrawberryIcon = createLucideIcon('strawberry', strawberry as any)
 const stats = computed<StatItem[]>(() => [
   ...(carreira.value
     ? [
-        { label: 'pH', value: carreira.value.ph.toFixed(1), icon: DropletIcon, color: 'text-amber-500' },
-        { label: 'EC', value: carreira.value.ec.toFixed(1), icon: ZapIcon, color: 'text-rose-500' },
-        { label: 'Umidade', value: `${carreira.value.umidade}%`, icon: CloudIcon, color: 'text-emerald-500' },
+        { label: 'pH', value: carreira.value.ph === null ? '—' : carreira.value.ph.toFixed(1), icon: DropletIcon, color: 'text-amber-500' },
+        { label: 'EC', value: carreira.value.ec === null ? '—' : carreira.value.ec.toFixed(1), icon: ZapIcon, color: 'text-rose-500' },
+        { label: 'Umidade', value: carreira.value.umidade === null ? '—' : `${carreira.value.umidade}%`, icon: CloudIcon, color: 'text-emerald-500' },
       ]
     : []),
 ])
@@ -74,8 +74,8 @@ const onToggle = () => {
         <div class="flex-1">
           <CardTitle class="text-lg font-semibold text-foreground">{{ carreira.nome }}</CardTitle>
           <div class="mt-1 flex gap-2 text-sm font-semibold text-foreground">
-            <div class="text-amber-500">pH {{ carreira.ph.toFixed(1) }}</div>
-            <div class="text-rose-500">EC {{ carreira.ec.toFixed(1) }}</div>
+            <div class="text-amber-500">pH {{ carreira.ph === null ? '—' : carreira.ph.toFixed(1) }}</div>
+            <div class="text-rose-500">EC {{ carreira.ec === null ? '—' : carreira.ec.toFixed(1) }}</div>
           </div>
         </div>
 

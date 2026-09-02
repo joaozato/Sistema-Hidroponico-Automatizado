@@ -1,6 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 from datetime import datetime
+
+class LineTelemetryResponse(BaseModel):
+    id: int = 0
+    snapshot_id: int = 0
+    timestamp: datetime
+    line_number: int
+    soil_humidity: Optional[float] = None
+    ph: Optional[float] = None
+    conductivity: Optional[float] = None
+    pump_state: List[int] = Field(default_factory=list)
+    flow_state: List[float] = Field(default_factory=list)
+
 
 class SensorDataResponse(BaseModel):
     id: int
@@ -10,8 +22,11 @@ class SensorDataResponse(BaseModel):
     soil_humidity: Optional[float] = None
     water_level: Optional[float] = None
     product_level: Optional[float] = None
+    central_water_level: Optional[float] = None
+    central_product_level: Optional[float] = None
     ph: Optional[float] = None
     conductivity: Optional[float] = None
+    lines: List[LineTelemetryResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -21,6 +36,7 @@ class ActuatorStateResponse(BaseModel):
     timestamp: datetime
     pump_state: Any
     flow_state: Any
+    lines: List[LineTelemetryResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -54,3 +70,17 @@ class ActionLogResponse(BaseModel):
 class ManualActionRequest(BaseModel):
     action_type: str # e.g. "TURN_ON_PUMP_1", "ADD_NUTRIENT"
     details: Optional[str] = None
+
+
+class PumpCommandRequest(BaseModel):
+    enabled: bool
+    flow: float = 0
+
+
+class PumpCommandResponse(BaseModel):
+    line_number: int
+    pump_number: int
+    enabled: bool
+    flow: float
+    line: LineTelemetryResponse
+    log: ActionLogResponse

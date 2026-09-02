@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { HistoryIcon, HouseIcon, Settings2Icon } from 'lucide-vue-next'
+import { useHomeStore } from '@/stores/home'
+import { useSettingsStore } from '@/stores/settings'
 
 const route = useRoute()
 
@@ -12,6 +14,14 @@ const tabs = [
 ]
 
 const activeTabName = computed(() => route.name)
+const homeStore = useHomeStore()
+const settingsStore = useSettingsStore()
+
+onMounted(() => {
+  void settingsStore.loadConfig()
+  homeStore.startPolling()
+})
+onUnmounted(() => homeStore.stopPolling())
 </script>
 
 <template>

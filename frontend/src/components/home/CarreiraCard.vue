@@ -29,9 +29,9 @@ const StrawberryIcon = createLucideIcon('strawberry', strawberry as any)
 const stats = computed<StatItem[]>(() => [
   ...(carreira.value
     ? [
-        { label: 'pH', value: carreira.value.ph.toFixed(1), icon: DropletIcon, color: 'text-amber-500' },
-        { label: 'EC', value: carreira.value.ec.toFixed(1), icon: ZapIcon, color: 'text-rose-500' },
-        { label: 'Umidade', value: `${carreira.value.umidade}%`, icon: CloudIcon, color: 'text-emerald-500' },
+        { label: 'pH', value: carreira.value.ph === null ? '—' : carreira.value.ph.toFixed(1), icon: DropletIcon, color: 'text-amber-500' },
+        { label: 'EC', value: carreira.value.ec === null ? '—' : carreira.value.ec.toFixed(1), icon: ZapIcon, color: 'text-rose-500' },
+        { label: 'Umidade', value: carreira.value.umidade === null ? '—' : `${carreira.value.umidade}%`, icon: CloudIcon, color: 'text-emerald-500' },
       ]
     : []),
 ])
